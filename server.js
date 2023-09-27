@@ -5,6 +5,7 @@ const PizZip = require("pizzip");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
+const { toUnicode } = require("punycode");
 
 const app = express();
 const port = 3000;
@@ -33,7 +34,39 @@ function generateDocumentContentChecker(formData) {
 }
 
 app.post("/generate-word", async (req, res) => {
-  const formData = await req.body;
+  let formData = await req.body;
+
+  //TODO; //Create 6 arrays, one with all members including outsiders (integrantesAll), another with
+  // the positions (cargo), another with carnet (ci) another one with the firm (empresa),
+  //For new dates and times, we create two arrays, both in string form using data from formData.
+
+  formData["integrantesAll"] = [];
+  for (let i = 0; i < formData.integrantes.length; i++) {
+    let integranteObj = {
+      n: i + 1,
+      nombre: formData.integrantes[i],
+      carnet: formData.carnets[i],
+      cargo: formData.cargos[i],
+      empresa: formData.empresas[i],
+    };
+
+    formData.integrantesAll.push(integranteObj);
+  }
+
+  formData["tiempos"] = [
+    {
+      fecha: formData.day + "/" + formData.month + "/" + formData.year,
+      horaInicio: "20:30",
+      horaSalida: "21:34",
+    },
+    { fecha: "12/12/2029", horaInicio: "20:30", horaSalida: "23:02" },
+  ];
+
+  // formData.cargos = formData.cargos.map((value) => {
+  //   foebar[value];
+  // });
+
+  console.log(formData);
 
   const templatePath = path.join(__dirname, "/templates/word-template.docx");
   const content = fs.readFileSync(templatePath, "binary");
